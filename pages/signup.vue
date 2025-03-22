@@ -124,7 +124,7 @@
           <div class="bg-white rounded-[2rem] p-[2rem] shadow-lg">
             <form @submit.prevent="nextStep" class="space-y-6 font-inter">
               <!-- Step 1: Login -->
-              <div v-if="currentStep === 0">
+              <div v-if="currentStep === 0" class="space-y-4">
                 <div class="space-y-2">
                   <label class="block text-[#242E42] font-medium">E-mail</label>
                   <input 
@@ -161,7 +161,7 @@
               </div>
 
               <!-- Step 2: Company Info -->
-              <div v-if="currentStep === 1">
+              <div v-if="currentStep === 1" class="space-y-4">
                 <div class="space-y-2">
                   <label class="block text-[#242E42] font-medium">Nome da Empresa</label>
                   <input 
@@ -183,12 +183,13 @@
                   <input 
                     v-model="form.cnpj"
                     type="text" 
-                    placeholder="Digite o CNPJ"
+                    placeholder="XX.XXX.XXX/XXXX-XX"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
                     :class="{'border-red-500': shouldShowError('cnpj') && formErrors.cnpj}"
                     required
+                    @input="handleCNPJInput"
+                    @keydown="(e) => handleKeydown(e, 'cnpj')"
                     @blur="markAsTouched('cnpj')"
-                    @input="markAsDirty('cnpj')"
                   >
                   <p v-if="shouldShowError('cnpj') && formErrors.cnpj" class="text-red-500 text-sm mt-1">
                     {{ formErrors.cnpj }}
@@ -199,10 +200,11 @@
                   <input 
                     v-model="form.whatsapp"
                     type="tel" 
-                    placeholder="+55 (XX) XXXXX-XXXX"
+                    placeholder="(XX) XXXXX-XXXX"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
                     :class="{'border-red-500': shouldShowError('whatsapp') && formErrors.whatsapp}"
                     required
+                    @input="handleWhatsAppInput"
                     @blur="markAsTouched('whatsapp')"
                   >
                   <p v-if="shouldShowError('whatsapp') && formErrors.whatsapp" class="text-red-500 text-sm mt-1">
@@ -212,36 +214,44 @@
               </div>
 
               <!-- Step 3: Address -->
-              <div v-if="currentStep === 2">
+              <div v-if="currentStep === 2" class="space-y-4">
+                <!-- CEP at full width -->
                 <div class="space-y-2">
                   <label class="block text-[#242E42] font-medium">CEP</label>
                   <input 
                     v-model="form.zipCode"
                     type="text" 
                     placeholder="XXXXX-XXX"
-                    @input="fetchAddress; markAsTouched('zipCode')"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
                     :class="{'border-red-500': shouldShowError('zipCode') && formErrors.zipCode}"
                     required
+                    @input="handleCEPInput"
+                    @blur="fetchAddress"
                   >
                   <p v-if="shouldShowError('zipCode') && formErrors.zipCode" class="text-red-500 text-sm mt-1">
                     {{ formErrors.zipCode }}
                   </p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-2">
-                    <label class="block text-[#242E42] font-medium">Endereço</label>
-                    <input 
-                      v-model="form.street"
-                      type="text" 
-                      placeholder="Rua Exemplo"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                      required
-                      :disabled="isLoadingAddress"
-                      @blur="markAsTouched('street')"
-                      @input="markAsDirty('street')"
-                    >
-                  </div>
+
+                <!-- Street at full width -->
+                <div class="space-y-2">
+                  <label class="block text-[#242E42] font-medium">Endereço</label>
+                  <input 
+                    v-model="form.street"
+                    type="text" 
+                    placeholder="Rua"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('street') && formErrors.street}"
+                    required
+                    :disabled="isLoadingAddress"
+                  >
+                  <p v-if="shouldShowError('street') && formErrors.street" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.street }}
+                  </p>
+                </div>
+
+                <!-- Number, City and State in a grid -->
+                <div class="grid grid-cols-3 gap-8">
                   <div class="space-y-2">
                     <label class="block text-[#242E42] font-medium">Número</label>
                     <input 
@@ -249,38 +259,44 @@
                       type="text" 
                       placeholder="123"
                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      :class="{'border-red-500': shouldShowError('number') && formErrors.number}"
                       required
-                      @blur="markAsTouched('number')"
-                      @input="markAsDirty('number')"
                     >
+                    <p v-if="shouldShowError('number') && formErrors.number" class="text-red-500 text-sm mt-1">
+                      {{ formErrors.number }}
+                    </p>
                   </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+
                   <div class="space-y-2">
                     <label class="block text-[#242E42] font-medium">Cidade</label>
                     <input 
                       v-model="form.city"
                       type="text" 
-                      placeholder="São Paulo"
+                      placeholder="Cidade"
                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      :class="{'border-red-500': shouldShowError('city') && formErrors.city}"
                       required
                       :disabled="isLoadingAddress"
-                      @blur="markAsTouched('city')"
-                      @input="markAsDirty('city')"
                     >
+                    <p v-if="shouldShowError('city') && formErrors.city" class="text-red-500 text-sm mt-1">
+                      {{ formErrors.city }}
+                    </p>
                   </div>
+
                   <div class="space-y-2">
                     <label class="block text-[#242E42] font-medium">Estado</label>
                     <input 
                       v-model="form.state"
                       type="text" 
-                      placeholder="SP"
+                      placeholder="UF"
                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      :class="{'border-red-500': shouldShowError('state') && formErrors.state}"
                       required
                       :disabled="isLoadingAddress"
-                      @blur="markAsTouched('state')"
-                      @input="markAsDirty('state')"
                     >
+                    <p v-if="shouldShowError('state') && formErrors.state" class="text-red-500 text-sm mt-1">
+                      {{ formErrors.state }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -478,5 +494,101 @@ const handleSubmit = () => {
     console.log('Form submitted:', form.value)
     // Handle final submission
   }
+}
+
+// Mask functions
+const maskCNPJ = (value) => {
+  value = value.replace(/\D/g, '')
+  value = value.replace(/^(\d{2})(\d)/, '$1.$2')
+  value = value.replace(/^(\d{2}\.\d{3})(\d)/, '$1.$2')
+  value = value.replace(/\.(\d{3})(\d)/, '.$1/$2')
+  value = value.replace(/(\d{4})(\d)/, '$1-$2')
+  return value
+}
+
+const maskWhatsApp = (value) => {
+  // Remove all non-digits
+  value = value.replace(/\D/g, '')
+  
+  // Limit to 11 digits (DDD + number)
+  value = value.slice(0, 11)
+  
+  // Format the number
+  if (value.length > 0) {
+    // Add parentheses around DDD
+    value = value.replace(/^(\d{2})(\d)/, '($1) $2')
+    // Add hyphen before the last 4 digits
+    if (value.length > 6) {
+      value = value.replace(/(\d{5})(\d{4})$/, '$1-$2')
+    }
+  }
+
+  return value
+}
+
+const maskCEP = (value) => {
+  value = value.replace(/\D/g, '')
+  value = value.replace(/^(\d{5})(\d)/, '$1-$2')
+  return value
+}
+
+// Input handlers
+const handleCNPJInput = (event) => {
+  const input = event.target
+  let value = input.value
+  input.value = maskCNPJ(value)
+  form.value.cnpj = input.value
+  markAsDirty('cnpj')
+}
+
+const handleWhatsAppInput = (event) => {
+  const input = event.target
+  const cursorPosition = input.selectionStart
+  const oldValue = input.value
+  const newValue = maskWhatsApp(input.value)
+  
+  // Update the value
+  input.value = newValue
+  form.value.whatsapp = newValue
+  
+  // Try to maintain cursor position
+  if (cursorPosition && oldValue.length < newValue.length) {
+    input.setSelectionRange(cursorPosition + 1, cursorPosition + 1)
+  }
+  
+  markAsDirty('whatsapp')
+}
+
+const handleCEPInput = (event) => {
+  const input = event.target
+  let value = input.value
+  input.value = maskCEP(value)
+  form.value.zipCode = input.value
+  markAsDirty('zipCode')
+}
+
+// Max length handlers
+const maxLength = {
+  cnpj: 18,    // XX.XXX.XXX/XXXX-XX
+  whatsapp: 19, // +55 (XX) XXXXX-XXXX
+  cep: 9       // XXXXX-XXX
+}
+
+const handleKeydown = (event, type) => {
+  const input = event.target
+  if (input.value.length >= maxLength[type] && 
+      event.keyCode !== 8 && // Backspace
+      event.keyCode !== 9 && // Tab
+      event.keyCode !== 37 && // Left arrow
+      event.keyCode !== 39) { // Right arrow
+    event.preventDefault()
+  }
+}
+
+// Update validation for WhatsApp
+const validateWhatsApp = (value) => {
+  // Remove all formatting to check length
+  const digits = value.replace(/\D/g, '')
+  return digits.length === 11 // Should have exactly 11 digits (2 for DDD + 9 for number)
 }
 </script> 
