@@ -122,178 +122,197 @@
           </div>
           
           <div class="bg-white rounded-[2rem] p-[2rem] shadow-lg">
-            <!-- Step 1: Login -->
-            <form v-if="currentStep === 0" @submit.prevent="nextStep" class="space-y-6 font-inter">
-              <div class="space-y-2">
-                <label class="block text-[#242E42] font-medium">E-mail</label>
-                <input 
-                  v-model="form.email"
-                  type="email" 
-                  placeholder="empresa@exemplo.com"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                  :class="{'border-red-500': shouldShowError('email') && formErrors.email}"
-                  required
-                  @blur="markAsTouched('email')"
-                  @input="markAsDirty('email')"
-                >
-                <p v-if="shouldShowError('email') && formErrors.email" class="text-red-500 text-sm mt-1">
-                  {{ formErrors.email }}
-                </p>
-              </div>
-
-              <div class="space-y-2">
-                <label class="block text-[#242E42] font-medium">Senha</label>
-                <input 
-                  v-model="form.password"
-                  type="password" 
-                  placeholder="Mínimo 6 caracteres"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                  :class="{'border-red-500': shouldShowError('password') && formErrors.password}"
-                  required
-                  @blur="markAsTouched('password')"
-                  @input="markAsDirty('password')"
-                >
-                <p v-if="shouldShowError('password') && formErrors.password" class="text-red-500 text-sm mt-1">
-                  {{ formErrors.password }}
-                </p>
-              </div>
-
-              <button type="submit" class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90">
-                Próximo
-              </button>
-            </form>
-
-            <!-- Step 2: Company Info -->
-            <form v-if="currentStep === 1" @submit.prevent="nextStep" class="space-y-6 font-inter">
-              <div class="space-y-2">
-                <label class="block text-[#242E42] font-medium">Nome da Empresa</label>
-                <input 
-                  v-model="form.name"
-                  type="text" 
-                  placeholder="Empresa Exemplo"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                  :class="{'border-red-500': shouldShowError('name') && formErrors.name}"
-                  required
-                  @blur="markAsTouched('name')"
-                  @input="markAsDirty('name')"
-                >
-                <p v-if="shouldShowError('name') && formErrors.name" class="text-red-500 text-sm mt-1">
-                  {{ formErrors.name }}
-                </p>
-              </div>
-              <div class="space-y-2">
-                <label class="block text-[#242E42] font-medium">CNPJ</label>
-                <input 
-                  v-model="form.cnpj"
-                  type="text" 
-                  placeholder="Digite o CNPJ"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                  :class="{'border-red-500': shouldShowError('cnpj') && formErrors.cnpj}"
-                  required
-                  @blur="markAsTouched('cnpj')"
-                  @input="markAsDirty('cnpj')"
-                >
-                <p v-if="shouldShowError('cnpj') && formErrors.cnpj" class="text-red-500 text-sm mt-1">
-                  {{ formErrors.cnpj }}
-                </p>
-              </div>
-              <div class="space-y-2">
-                <label class="block text-[#242E42] font-medium">WhatsApp</label>
-                <input 
-                  v-model="form.whatsapp"
-                  type="tel" 
-                  placeholder="+55 (XX) XXXXX-XXXX"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                  :class="{'border-red-500': shouldShowError('whatsapp') && formErrors.whatsapp}"
-                  required
-                  @blur="markAsTouched('whatsapp')"
-                >
-                <p v-if="shouldShowError('whatsapp') && formErrors.whatsapp" class="text-red-500 text-sm mt-1">
-                  {{ formErrors.whatsapp }}
-                </p>
-              </div>
-
-              <button type="submit" class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90">
-                Próximo
-              </button>
-            </form>
-
-            <!-- Step 3: Address -->
-            <form v-if="currentStep === 2" @submit.prevent="handleSubmit" class="space-y-6 font-inter">
-              <div class="space-y-2">
-                <label class="block text-[#242E42] font-medium">CEP</label>
-                <input 
-                  v-model="form.zipCode"
-                  type="text" 
-                  placeholder="XXXXX-XXX"
-                  @input="fetchAddress; markAsTouched('zipCode')"
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                  :class="{'border-red-500': shouldShowError('zipCode') && formErrors.zipCode}"
-                  required
-                >
-                <p v-if="shouldShowError('zipCode') && formErrors.zipCode" class="text-red-500 text-sm mt-1">
-                  {{ formErrors.zipCode }}
-                </p>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
+            <form @submit.prevent="nextStep" class="space-y-6 font-inter">
+              <!-- Step 1: Login -->
+              <div v-if="currentStep === 0">
                 <div class="space-y-2">
-                  <label class="block text-[#242E42] font-medium">Endereço</label>
+                  <label class="block text-[#242E42] font-medium">E-mail</label>
                   <input 
-                    v-model="form.street"
-                    type="text" 
-                    placeholder="Rua Exemplo"
+                    v-model="form.email"
+                    type="email" 
+                    placeholder="empresa@exemplo.com"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('email') && formErrors.email}"
                     required
-                    :disabled="isLoadingAddress"
-                    @blur="markAsTouched('street')"
-                    @input="markAsDirty('street')"
+                    @blur="markAsTouched('email')"
+                    @input="markAsDirty('email')"
                   >
+                  <p v-if="shouldShowError('email') && formErrors.email" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.email }}
+                  </p>
                 </div>
+
                 <div class="space-y-2">
-                  <label class="block text-[#242E42] font-medium">Número</label>
+                  <label class="block text-[#242E42] font-medium">Senha</label>
                   <input 
-                    v-model="form.number"
-                    type="text" 
-                    placeholder="123"
+                    v-model="form.password"
+                    type="password" 
+                    placeholder="Mínimo 6 caracteres"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('password') && formErrors.password}"
                     required
-                    @blur="markAsTouched('number')"
-                    @input="markAsDirty('number')"
+                    @blur="markAsTouched('password')"
+                    @input="markAsDirty('password')"
                   >
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <label class="block text-[#242E42] font-medium">Cidade</label>
-                  <input 
-                    v-model="form.city"
-                    type="text" 
-                    placeholder="São Paulo"
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                    required
-                    :disabled="isLoadingAddress"
-                    @blur="markAsTouched('city')"
-                    @input="markAsDirty('city')"
-                  >
-                </div>
-                <div class="space-y-2">
-                  <label class="block text-[#242E42] font-medium">Estado</label>
-                  <input 
-                    v-model="form.state"
-                    type="text" 
-                    placeholder="SP"
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
-                    required
-                    :disabled="isLoadingAddress"
-                    @blur="markAsTouched('state')"
-                    @input="markAsDirty('state')"
-                  >
+                  <p v-if="shouldShowError('password') && formErrors.password" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.password }}
+                  </p>
                 </div>
               </div>
 
-              <button type="submit" class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90">
-                Finalizar Cadastro
-              </button>
+              <!-- Step 2: Company Info -->
+              <div v-if="currentStep === 1">
+                <div class="space-y-2">
+                  <label class="block text-[#242E42] font-medium">Nome da Empresa</label>
+                  <input 
+                    v-model="form.name"
+                    type="text" 
+                    placeholder="Empresa Exemplo"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('name') && formErrors.name}"
+                    required
+                    @blur="markAsTouched('name')"
+                    @input="markAsDirty('name')"
+                  >
+                  <p v-if="shouldShowError('name') && formErrors.name" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.name }}
+                  </p>
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-[#242E42] font-medium">CNPJ</label>
+                  <input 
+                    v-model="form.cnpj"
+                    type="text" 
+                    placeholder="Digite o CNPJ"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('cnpj') && formErrors.cnpj}"
+                    required
+                    @blur="markAsTouched('cnpj')"
+                    @input="markAsDirty('cnpj')"
+                  >
+                  <p v-if="shouldShowError('cnpj') && formErrors.cnpj" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.cnpj }}
+                  </p>
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-[#242E42] font-medium">WhatsApp</label>
+                  <input 
+                    v-model="form.whatsapp"
+                    type="tel" 
+                    placeholder="+55 (XX) XXXXX-XXXX"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('whatsapp') && formErrors.whatsapp}"
+                    required
+                    @blur="markAsTouched('whatsapp')"
+                  >
+                  <p v-if="shouldShowError('whatsapp') && formErrors.whatsapp" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.whatsapp }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Step 3: Address -->
+              <div v-if="currentStep === 2">
+                <div class="space-y-2">
+                  <label class="block text-[#242E42] font-medium">CEP</label>
+                  <input 
+                    v-model="form.zipCode"
+                    type="text" 
+                    placeholder="XXXXX-XXX"
+                    @input="fetchAddress; markAsTouched('zipCode')"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                    :class="{'border-red-500': shouldShowError('zipCode') && formErrors.zipCode}"
+                    required
+                  >
+                  <p v-if="shouldShowError('zipCode') && formErrors.zipCode" class="text-red-500 text-sm mt-1">
+                    {{ formErrors.zipCode }}
+                  </p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <label class="block text-[#242E42] font-medium">Endereço</label>
+                    <input 
+                      v-model="form.street"
+                      type="text" 
+                      placeholder="Rua Exemplo"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      required
+                      :disabled="isLoadingAddress"
+                      @blur="markAsTouched('street')"
+                      @input="markAsDirty('street')"
+                    >
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-[#242E42] font-medium">Número</label>
+                    <input 
+                      v-model="form.number"
+                      type="text" 
+                      placeholder="123"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      required
+                      @blur="markAsTouched('number')"
+                      @input="markAsDirty('number')"
+                    >
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <label class="block text-[#242E42] font-medium">Cidade</label>
+                    <input 
+                      v-model="form.city"
+                      type="text" 
+                      placeholder="São Paulo"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      required
+                      :disabled="isLoadingAddress"
+                      @blur="markAsTouched('city')"
+                      @input="markAsDirty('city')"
+                    >
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-[#242E42] font-medium">Estado</label>
+                    <input 
+                      v-model="form.state"
+                      type="text" 
+                      placeholder="SP"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0258FD]"
+                      required
+                      :disabled="isLoadingAddress"
+                      @blur="markAsTouched('state')"
+                      @input="markAsDirty('state')"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <div class="flex justify-between pt-6">
+                <button 
+                  type="button"
+                  v-if="currentStep > 0"
+                  @click="previousStep"
+                  class="px-6 py-2 border border-[#0258FD] text-[#0258FD] rounded-lg hover:bg-gray-50"
+                >
+                  Voltar
+                </button>
+                
+                <button 
+                  v-if="currentStep < steps.length - 1"
+                  type="submit"
+                  class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90"
+                >
+                  Próximo
+                </button>
+                
+                <button 
+                  v-if="currentStep === steps.length - 1"
+                  type="button"
+                  @click="handleSubmit"
+                  class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90"
+                >
+                  Finalizar Cadastro
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -405,6 +424,12 @@ const validateStep = () => {
   }
 
   return isValid
+}
+
+const previousStep = () => {
+  if (currentStep.value > 0) {
+    currentStep.value--
+  }
 }
 
 const nextStep = () => {
