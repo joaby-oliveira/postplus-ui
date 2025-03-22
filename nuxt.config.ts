@@ -28,5 +28,19 @@ export default defineNuxtConfig({
 
   devServer: {
     port: 3001
+  },
+
+  plugins: [
+    '~/plugins/toast.js'
+  ],
+
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        prependPath: true,
+      }
+    }
   }
 })

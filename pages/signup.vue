@@ -302,7 +302,7 @@
               </div>
 
               <!-- Navigation Buttons -->
-              <div class="flex justify-between pt-6">
+              <div class="flex justify-between pt-8">
                 <button 
                   type="button"
                   v-if="currentStep > 0"
@@ -311,7 +311,8 @@
                 >
                   Voltar
                 </button>
-                
+
+                <!-- Next button for steps 0 and 1 -->
                 <button 
                   v-if="currentStep < steps.length - 1"
                   type="submit"
@@ -319,15 +320,30 @@
                 >
                   Próximo
                 </button>
-                
+
+                <!-- Finish button only for last step -->
                 <button 
                   v-if="currentStep === steps.length - 1"
-                  type="button"
+                  type="submit"
+                  :disabled="isSubmitting"
                   @click="handleSubmit"
-                  class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90"
+                  class="ml-auto px-6 py-2 bg-[#0258FD] text-white rounded-lg hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed"
                 >
-                  Finalizar Cadastro
+                  {{ isSubmitting ? 'Registrando...' : 'Finalizar Cadastro' }}
                 </button>
+              </div>
+
+              <!-- Add this after your form buttons -->
+              <div class="mt-6 text-center">
+                <p class="text-[#242E42] font-inter">
+                  Já tem uma conta? 
+                  <NuxtLink 
+                    to="/login" 
+                    class="text-[#0258FD] hover:underline font-medium"
+                  >
+                    Fazer login
+                  </NuxtLink>
+                </p>
               </div>
             </form>
           </div>
@@ -338,6 +354,11 @@
 </template>
 
 <script setup>
+import { useToast } from 'vue-toastification'
+import { ref } from 'vue'
+
+const toast = useToast()
+const isSubmitting = ref(false)
 const currentStep = ref(0)
 const steps = ['Login', 'Empresa', 'Endereço']
 const isLoadingAddress = ref(false)
@@ -346,16 +367,21 @@ const touchedFields = ref(new Set())
 const dirtyFields = ref(new Set())
 
 const form = ref({
-  email: '',
-  password: '',
-  name: '',
-  cnpj: '',
-  whatsapp: '',
-  street: '',
-  number: '',
-  city: '',
-  state: '',
-  zipCode: ''
+  // Login info
+  email: 'empresa@exemplo.com',
+  password: 'senha123',
+  
+  // Company info
+  name: 'Empresa Exemplo',
+  cnpj: '12.345.678/0001-90',
+  whatsapp: '(11) 98765-4321',
+  
+  // Address info
+  zipCode: '01234-567',
+  street: 'Rua Exemplo',
+  number: '123',
+  city: 'São Paulo',
+  state: 'SP'
 })
 
 const markAsTouched = (field) => {
@@ -489,10 +515,59 @@ const fetchAddress = async () => {
   }
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (validateStep()) {
-    console.log('Form submitted:', form.value)
-    // Handle final submission
+    try {
+      isSubmitting.value = true
+      
+      const fullAddress = form.value.number 
+        ? `${form.value.street}, ${form.value.number}`
+        : form.value.street
+
+      // Format WhatsApp number: remove non-digits and add +55
+      const formattedWhatsApp = '+55' + form.value.whatsapp.replace(/\D/g, '')
+
+      const response = await fetch('http://localhost:3000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: form.value.name,
+          email: form.value.email,
+          password: form.value.password,
+          cnpj: form.value.cnpj.replace(/\D/g, ''),
+          street: fullAddress,
+          city: form.value.city,
+          state: form.value.state,
+          zipCode: form.value.zipCode.replace(/\D/g, ''),
+          whatsapp: formattedWhatsApp // Using the formatted number here
+        })
+      })
+
+      const data = await response.json()
+      console.log({data})
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao registrar empresa')
+      }
+
+      toast.success('Empresa registrada com sucesso!')
+      
+      // Wait for toast to be visible before redirect
+      setTimeout(() => {
+        navigateTo('/login')
+      }, 2000)
+
+    } catch (error) {
+      console.log({error})
+      toast.error(error.message || 'Ocorreu um erro ao registrar a empresa')
+    } finally {
+      isSubmitting.value = false
+    }
   }
 }
 
