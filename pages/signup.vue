@@ -10,8 +10,14 @@
             <!-- Instagram Header -->
             <div class="flex items-center p-3 border-b">
               <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                <!-- Company initial or logo placeholder -->
-                <span class="font-bold text-gray-500">
+                <!-- Company logo or initial -->
+                <img 
+                  v-if="form.logoPreview" 
+                  :src="form.logoPreview" 
+                  alt="Logo Preview" 
+                  class="w-full h-full object-cover"
+                />
+                <span v-else class="font-bold text-gray-500">
                   {{ form.name ? form.name[0].toUpperCase() : 'E' }}
                 </span>
               </div>
@@ -45,13 +51,31 @@
               </div>
 
               <!-- Company Info at Bottom -->
-              <div class="bg-white/90 backdrop-blur-sm absolute bottom-0 left-0 right-0 p-4 text-center">
-                <h2 class="font-geologica text-lg font-bold text-[#242E42]">
-                  {{ form.name || 'Nome da Empresa' }}
-                </h2>
-                <div class="font-inter text-[#242E42] text-sm mt-1">
-                  <p>{{ form.street && form.number ? `${form.street}, ${form.number}` : 'Endereço da empresa' }}</p>
-                  <p>{{ form.whatsapp || 'Contato: (XX) XXXXX-XXXX' }}</p>
+              <div class="bg-[#0258FD]/90 backdrop-blur-sm absolute bottom-0 left-0 right-0 p-4">
+                <div class="flex items-center space-x-3">
+                  <!-- Company Logo -->
+                  <div class="w-14 h-14 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <img 
+                      v-if="form.logoPreview" 
+                      :src="form.logoPreview" 
+                      alt="Logo Preview" 
+                      class="w-full h-full object-cover"
+                    />
+                    <span v-else class="font-bold text-white/70">
+                      {{ form.name ? form.name[0].toUpperCase() : 'E' }}
+                    </span>
+                  </div>
+
+                  <!-- Company Info -->
+                  <div class="flex-1">
+                    <h2 class="font-geologica text-lg font-bold text-white line-clamp-1">
+                      {{ form.name || 'Nome da Empresa' }}
+                    </h2>
+                    <div class="font-inter text-white/90 text-sm">
+                      <p class="line-clamp-1">{{ form.street && form.number ? `${form.street}, ${form.number}` : 'Endereço da empresa' }}</p>
+                      <p class="line-clamp-1">{{ form.whatsapp || 'Contato: (XX) XXXXX-XXXX' }}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -162,6 +186,58 @@
 
               <!-- Step 2: Company Info -->
               <div v-if="currentStep === 1" class="space-y-4">
+                <!-- Logo Upload -->
+                <div class="space-y-2">
+                  <label class="block text-[#242E42] font-medium">Logo da Empresa</label>
+                  <div class="flex items-center space-x-4">
+                    <!-- Logo Preview -->
+                    <div class="relative">
+                      <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                        <img 
+                          v-if="form.logo" 
+                          :src="form.logoPreview" 
+                          alt="Logo Preview" 
+                          class="w-full h-full object-cover"
+                        />
+                        <span v-else class="text-2xl font-bold text-gray-300">
+                          {{ form.name ? form.name[0].toUpperCase() : 'E' }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Upload Controls -->
+                    <div class="flex-1">
+                      <input
+                        ref="fileInput"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="handleLogoChange"
+                      />
+                      <div class="flex space-x-4">
+                        <button
+                          type="button"
+                          @click="triggerFileInput"
+                          class="px-4 py-2 bg-[#0258FD] text-white rounded-lg font-medium hover:bg-opacity-90 text-sm"
+                        >
+                          Escolher arquivo
+                        </button>
+                        <button
+                          v-if="form.logo"
+                          type="button"
+                          @click="removeLogo"
+                          class="px-4 py-2 border border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 text-sm"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                      <p class="text-sm text-gray-500 mt-2">
+                        Formatos aceitos: PNG, JPG ou JPEG. Tamanho máximo: 2MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="space-y-2">
                   <label class="block text-[#242E42] font-medium">Nome da Empresa</label>
                   <input 
@@ -368,20 +444,22 @@ const dirtyFields = ref(new Set())
 
 const form = ref({
   // Login info
-  email: 'empresa@exemplo.com',
-  password: 'senha123',
+  email: '',
+  password: '',
   
   // Company info
-  name: 'Empresa Exemplo',
-  cnpj: '12.345.678/0001-90',
-  whatsapp: '(11) 98765-4321',
+  name: '',
+  cnpj: '',
+  whatsapp: '',
+  logo: null,
+  logoPreview: null,
   
   // Address info
-  zipCode: '01234-567',
-  street: 'Rua Exemplo',
-  number: '123',
-  city: 'São Paulo',
-  state: 'SP'
+  zipCode: '',
+  street: '',
+  number: '',
+  city: '',
+  state: ''
 })
 
 const markAsTouched = (field) => {
@@ -515,6 +593,48 @@ const fetchAddress = async () => {
   }
 }
 
+const fileInput = ref(null)
+
+const triggerFileInput = () => {
+  fileInput.value.click()
+}
+
+const handleLogoChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Validate file type
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg']
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Formato de arquivo não suportado. Use PNG, JPG ou JPEG.')
+    return
+  }
+
+  // Validate file size (2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    toast.error('Arquivo muito grande. O tamanho máximo é 2MB.')
+    return
+  }
+
+  // Create preview
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.value.logoPreview = e.target.result
+  }
+  reader.readAsDataURL(file)
+
+  // Store file for later upload
+  form.value.logo = file
+}
+
+const removeLogo = () => {
+  form.value.logo = null
+  form.value.logoPreview = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
 const handleSubmit = async () => {
   if (validateStep()) {
     try {
@@ -527,6 +647,20 @@ const handleSubmit = async () => {
       // Format WhatsApp number: remove non-digits and add +55
       const formattedWhatsApp = '+55' + form.value.whatsapp.replace(/\D/g, '')
 
+      // Create company data object
+      const companyData = {
+        name: form.value.name,
+        email: form.value.email,
+        password: form.value.password,
+        cnpj: form.value.cnpj.replace(/\D/g, ''),
+        street: fullAddress,
+        city: form.value.city,
+        state: form.value.state,
+        zipCode: form.value.zipCode.replace(/\D/g, ''),
+        whatsapp: formattedWhatsApp
+      }
+
+      // First step: Create company
       const response = await fetch('http://localhost:3000/auth/register', {
         method: 'POST',
         headers: {
@@ -535,17 +669,7 @@ const handleSubmit = async () => {
           'Access-Control-Allow-Origin': '*'
         },
         credentials: 'include',
-        body: JSON.stringify({
-          name: form.value.name,
-          email: form.value.email,
-          password: form.value.password,
-          cnpj: form.value.cnpj.replace(/\D/g, ''),
-          street: fullAddress,
-          city: form.value.city,
-          state: form.value.state,
-          zipCode: form.value.zipCode.replace(/\D/g, ''),
-          whatsapp: formattedWhatsApp // Using the formatted number here
-        })
+        body: JSON.stringify(companyData)
       })
 
       const data = await response.json()
@@ -553,6 +677,27 @@ const handleSubmit = async () => {
 
       if (!response.ok) {
         throw new Error(data.message || 'Erro ao registrar empresa')
+      }
+
+      // Second step: Upload logo if exists
+      if (form.value.logo) {
+        const logoFormData = new FormData()
+        logoFormData.append('logo', form.value.logo)
+
+        const logoResponse = await fetch(`http://localhost:3000/companies/${data.id}/logo`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          credentials: 'include',
+          body: logoFormData
+        })
+
+        if (!logoResponse.ok) {
+          console.warn('Logo upload failed:', await logoResponse.json())
+          // Don't throw error here, as the company was created successfully
+        }
       }
 
       toast.success('Empresa registrada com sucesso!')
