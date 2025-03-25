@@ -151,7 +151,7 @@ const handleLogin = async () => {
 
       // Only access localStorage on client side
       if (process.client) {
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('token', data.access_token)
       }
 
       toast.success('Login realizado com sucesso!')
